@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ソース ファイル">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="ヘッダー ファイル">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="リソース ファイル">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{5a218f14-3bd3-4da0-90a5-ed00eaabf493}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\PNG">
+      <UniqueIdentifier>{539fcf58-7626-4a90-a43e-5dc73d8e6089}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\BMP">
+      <UniqueIdentifier>{401c3ccc-6de1-4617-ab2c-f0a03995f65e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\BMP\BMP.cpp">
+      <Filter>Source\BMP</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\main.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PNG\PNG.cpp">
+      <Filter>Source\PNG</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Huffman\Huffman.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\LZSS\LZSS.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\BMP\BMP.h">
+      <Filter>Source\BMP</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PNG\PNG.h">
+      <Filter>Source\PNG</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Huffman\Huffman.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LZSS\LZSS.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
