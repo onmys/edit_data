@@ -26,7 +26,7 @@ bool LZSS::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compresse
 		loadSize = rawData.size() - totalLoadSize >= REFERENCE_SIZE + LENGTH_MAX ? REFERENCE_SIZE + LENGTH_MAX : rawData.size() - totalLoadSize;
 
 		//	圧縮前データをスライド窓にコピー
-		std::copy( rawData.begin() + totalLoadSize, rawData.begin() + totalLoadSize + loadSize, slide.begin() + REFERENCE_SIZE);
+		std::copy( rawData.begin() + totalLoadSize, rawData.begin() + totalLoadSize + loadSize, slide.begin() + REFERENCE_SIZE + offset);
 		offset = LENGTH_MAX;
 
 		int slideLimitSize = loadSize == REFERENCE_SIZE + LENGTH_MAX ? REFERENCE_SIZE * 2 : REFERENCE_SIZE + loadSize/* + LENGTH_MAX*/;

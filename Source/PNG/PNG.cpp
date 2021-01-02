@@ -7,6 +7,7 @@
 //*********************************************************************************************
 namespace png
 {
+/*
 z_stream zStream;
 
 //	à≥èk
@@ -100,6 +101,7 @@ bool uncompressionZlib( unsigned char* inputBuffer, const int inputBufferSize, u
 
 	return true;
 }
+*/
 
 int flagOnCount( int bitFlag )
 {

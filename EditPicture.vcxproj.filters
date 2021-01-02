@@ -22,6 +22,12 @@
     <Filter Include="Source\BMP">
       <UniqueIdentifier>{401c3ccc-6de1-4617-ab2c-f0a03995f65e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Huffman">
+      <UniqueIdentifier>{b605e2a1-4ad3-4036-ab39-07ff34729336}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\LZSS">
+      <UniqueIdentifier>{6c8cbf47-2aa9-439f-8da8-f399b7039ea1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\BMP\BMP.cpp">
@@ -34,10 +40,10 @@
       <Filter>Source\PNG</Filter>
     </ClCompile>
     <ClCompile Include="Source\Huffman\Huffman.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source\Huffman</Filter>
     </ClCompile>
     <ClCompile Include="Source\LZSS\LZSS.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source\LZSS</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -48,10 +54,10 @@
       <Filter>Source\PNG</Filter>
     </ClInclude>
     <ClInclude Include="Source\Huffman\Huffman.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Source\Huffman</Filter>
     </ClInclude>
     <ClInclude Include="Source\LZSS\LZSS.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Source\LZSS</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

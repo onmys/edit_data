@@ -6,7 +6,7 @@
 #include <map>
 #include <zlib.h>
 
-#pragma comment(lib, "zlibd.lib")
+//#pragma comment(lib, "zlibd.lib")
 
 //*********************************************************************************************
 //	
