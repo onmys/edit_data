@@ -11,7 +11,7 @@ struct Node
 	Node* childRight;
 
 	long length;
-	long encode;
+	unsigned long encode;
 };
 
 class Huffman
@@ -33,7 +33,9 @@ public:
 
 private:
 	int getNodeDepthNum( Node* node );
+	void find( long code, int codeLength, BYTE& key, Node& node );
 
-	std::map<int, Node> nodes;
+	std::map<int, Node> _nodes;
+	std::vector<BYTE> _inputRawData;
 };
 

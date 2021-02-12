@@ -4,8 +4,26 @@
 #include "Huffman/Huffman.h"
 #include "LZSS/LZSS.h"
 
+void printb(unsigned int v) {
+  unsigned int mask = (int)1 << (sizeof(v) * CHAR_BIT - 1);
+  do putchar(mask & v ? '1' : '0');
+  while (mask >>= 1);
+}
+
 int main( int argc, char* argv[] )
 {
+	//	符号有り無しでINT_MINを右シフトした時の挙動が違う？？？
+	//unsigned int test = INT_MIN;
+	//printb( test );
+	//printf( "\n" );
+	//printb( test >> 31 );
+	//for( int i = 0; i < 8; i++ )
+	//{
+	//	printf( "\n" );
+	//	printb( test >> i );
+	//}
+
+
 	png::PNG _png;
 	_png.load( "Assets/a.png" );
 	_png.write( "Assets/output.png" );
@@ -41,16 +59,15 @@ int main( int argc, char* argv[] )
 
 	std::vector<BYTE> rawData( data, data + fileSize );
 	std::vector<BYTE> compressedLZSSData;
-	compressedLZSSData.clear();
 	std::vector<BYTE> compressedHuffmanData;
-	compressedHuffmanData.clear();
 
 	LZSS lzss;
 	Huffman huffman;
 
 	//	データ圧縮
-	lzss.encode( rawData, compressedLZSSData );
-	huffman.encode( compressedLZSSData, compressedHuffmanData );
+	//lzss.encode( rawData, compressedLZSSData );
+	//huffman.encode( compressedLZSSData, compressedHuffmanData );
+	huffman.encode( rawData, compressedHuffmanData );
 
 	BYTE* output = compressedHuffmanData.data();
 
@@ -66,7 +83,9 @@ int main( int argc, char* argv[] )
 
 	//	データ解凍
 	rawData.clear();
-	lzss.decode( compressedLZSSData, rawData );
+	//compressedLZSSData.clear();
+	huffman.decode(compressedHuffmanData, rawData);
+	//lzss.decode( compressedLZSSData, rawData );
 
 	output = rawData.data();
 

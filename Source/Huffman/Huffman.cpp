@@ -2,18 +2,19 @@
 
 bool Huffman::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compressedData )
 {
-	nodes.clear();
+	_inputRawData = rawData;
+	_nodes.clear();
 
 	//	出現回数をチェック
 	for( int i = 0; i < rawData.size(); i++ )
 	{
-		if( nodes.count( ( int )( rawData[i] ) ) == 0 )
+		if( _nodes.count( ( int )( rawData[i] ) ) == 0 )
 		{
 			Node node = { 0, nullptr, nullptr, nullptr, INT_MAX, 0 };
-			nodes.insert( std::make_pair( ( int )( rawData[i] ), node ) );
+			_nodes.insert( std::make_pair( ( int )( rawData[i] ), node ) );
 		}
 
-		nodes[( int )( rawData[i] )].count++;
+		_nodes[( int )( rawData[i] )].count++;
 	}
 
 	int offset = 256;
@@ -30,7 +31,7 @@ bool Huffman::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compre
 		nodeRight = nullptr;
 
 		//	木の作成
-		for( auto i = nodes.begin(); i != nodes.end(); i++ )
+		for( auto i = _nodes.begin(); i != _nodes.end(); i++ )
 		{
 			if( i->second.parent == nullptr )
 			{
@@ -80,15 +81,15 @@ bool Huffman::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compre
 		}
 
 		dummyNode = { nodeLeft->count + nodeRight->count, nullptr, nodeLeft, nodeRight, INT_MAX, 0 };
-		nodes.insert( std::make_pair( ( int )( offset + dummyNodeNum ), dummyNode ) );
-		nodeLeft->parent = &nodes[offset + dummyNodeNum];
-		nodeRight->parent = &nodes[offset + dummyNodeNum];
+		_nodes.insert( std::make_pair( ( int )( offset + dummyNodeNum ), dummyNode ) );
+		nodeLeft->parent = &_nodes[offset + dummyNodeNum];
+		nodeRight->parent = &_nodes[offset + dummyNodeNum];
 		dummyNodeNum++;
 
 		//	木が完成したかチェック
 		int count = 0;
 
-		for( auto i = nodes.begin(); i != nodes.end(); i++ )
+		for( auto i = _nodes.begin(); i != _nodes.end(); i++ )
 		{
 			if( i->second.parent == nullptr )
 			{
@@ -106,7 +107,7 @@ bool Huffman::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compre
 	int length = 0;
 	int encode = 0;
 
-	for( auto i = nodes.begin(); i != nodes.end(); i++ )
+	for( auto i = _nodes.begin(); i != _nodes.end(); i++ )
 	{
 		if( i->first < offset )
 		{
@@ -129,11 +130,11 @@ bool Huffman::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compre
 	}
 
 	//	dummyNodeの削除
-	for( auto i = nodes.begin(); i != nodes.end(); )
+	for( auto i = _nodes.begin(); i != _nodes.end(); )
 	{
 		if( i->first >= offset )
 		{
-			i = nodes.erase( i );
+			i = _nodes.erase( i );
 			continue;
 		}
 
@@ -142,55 +143,104 @@ bool Huffman::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compre
 
 	//	対応コードの登録
 	//	対応コード数
-	compressedData.push_back( nodes.size() );
+	compressedData.push_back( _nodes.size() );
+	printf( "対応コード登録(数：%d）\n", compressedData[0] );
 
-	for( auto i = nodes.begin(); i != nodes.end(); i++ )
+	for( auto i = _nodes.begin(); i != _nodes.end(); i++ )
 	{
 		//	実データ
 		compressedData.push_back( BYTE( i->first ) );
 		//	対応コードの長さ
 		compressedData.push_back( BYTE( i->second.length ) );
 		//	対応コード
-		for( int k = 0; k < i->second.length; k += 8 )
+		for( int k = 0; k < i->second.length; k++ )
 		{
 			compressedData.push_back( BYTE( i->second.encode >> ( k * 8 ) ) );
 		}
 	}
 
 	//	実データを対応コードに差し替え
-	int totalSize = 0;
-	int sizeMax = 0;
+	length = 0;
+	unsigned long encodeData = 0;
+
 	for( int i = 0; i < rawData.size(); i++ )
 	{
-		//	TODO : ビット単位でデータを
-		for( int k = 0; k < nodes[rawData[i]].length; k += 8 )
+		encodeData <<= _nodes[rawData[i]].length;
+		encodeData |= _nodes[rawData[i]].encode;
+		length += _nodes[rawData[i]].length;
+
+		if( length >= 8 )
 		{
-			compressedData.push_back( BYTE( nodes[rawData[i]].encode >> ( k * 8 ) ) );
+			compressedData.push_back( BYTE( encodeData >> ( length - 8 ) ) );
+			encodeData <<= ( 32 - ( length - 8 ) );
+			encodeData >>= ( 32 - ( length - 8 ) );
+			length -= 8;
 		}
-		totalSize += nodes[rawData[i]].length;
-		if( sizeMax < nodes[rawData[i]].length )
-		{
-			sizeMax = nodes[rawData[i]].length;
-		}
-		printf( "対応コードサイズ = %d, 合計サイズ = %d, 平均サイズ(1文字あたり) = %d\n", nodes[rawData[i]].length, totalSize, totalSize / ( i == 0 ? 1 : i ) );
 	}
-	printf( "最大対応コードサイズ = %d\n", sizeMax );
-	printf( "未圧縮の合計サイズ = %d\n", rawData.size() * 8 );
 
 	return true;
 }
 
 bool Huffman::decode( const std::vector<BYTE> compressedData, std::vector<BYTE>& rawData )
 {
+	//	対応コードの取得
+	int dataPosition = 0;
+	int codeSize = compressedData[dataPosition++];
+	//std::map<int, Node> codes;
+	_nodes.clear();
 
+	long key = 0;
+	long length = 0;
+	unsigned long encode;
+	Node node;
 
+	for( int i = 0; i < codeSize; i++ )
+	{
+		encode = 0;
+		key = compressedData[dataPosition++];
+		length = compressedData[dataPosition++];
 
+		for( int k = 0; k < length; k++ )
+		{
+			encode |= ( compressedData[dataPosition++] << ( k * 8 ) );
+		}
 
+		node = { 0, nullptr, nullptr, nullptr, length, encode };
+		_nodes.insert( std::make_pair( ( int )( key ), node ) );
+	}
 
+	unsigned long buffer = compressedData[dataPosition++];
+	int bufferLength = 8;
+	int matchCodeLength = 0;
+	BYTE raw;
+	int shift = 0;
 
+	//	対応コードを実データに差し替え
+	for( int i = dataPosition; i < compressedData.size(); )
+	{
+		node.encode = 0;
+		node.length = 0;
 
+		find( buffer, bufferLength, raw, node );
 
-	return false;
+		if( node.length > 0 )
+		{
+			rawData.push_back( raw );
+			shift = 32 - ( bufferLength - node.length );
+			buffer = shift >= 32 ? 0 : buffer << shift;
+			buffer = shift >= 32 ? 0 : buffer >> shift;
+			bufferLength -= node.length;
+		}
+		else
+		{
+			buffer <<= 8;
+			buffer |= compressedData[i];
+			bufferLength += 8;
+			i++;
+		}
+	}
+
+	return true;
 }
 
 int Huffman::getNodeDepthNum( Node* node )
@@ -209,4 +259,31 @@ int Huffman::getNodeDepthNum( Node* node )
 	}
 
 	return depthNum;
+}
+
+void Huffman::find( long code, int codeLength, BYTE& key, Node& node )
+{
+	long tmp = 0;
+	int length = 0;
+
+	for( int i = codeLength - 1; i >= 0; i-- )
+	{
+		tmp = code >> i;
+		length = codeLength - i;
+
+		for( auto itr = _nodes.begin(); itr != _nodes.end(); itr++ )
+		{
+			if( itr->second.length != length )
+			{
+				continue;
+			}
+
+			if( itr->second.encode == tmp )
+			{
+				key = itr->first;
+				node = itr->second;
+				return;
+			}
+		}
+	}
 }
