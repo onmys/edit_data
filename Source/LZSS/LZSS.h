@@ -26,6 +26,9 @@ private:
 	const int POSITION_SIZE = 12 + 1;	//	エンコード時の位置(bit)
 	const int REFERENCE_SIZE = 1 << POSITION_SIZE;	//	参照サイズ
 
+	void dataPush( BYTE data, int length, std::vector<BYTE>& compressedData );
+	bool dataPop( const std::vector<BYTE> compressedData, int popLength, BYTE& popData );
+
 	WORD encodeData;
 };
 

@@ -12,18 +12,6 @@ void printb(unsigned int v) {
 
 int main( int argc, char* argv[] )
 {
-	//	符号有り無しでINT_MINを右シフトした時の挙動が違う？？？
-	//unsigned int test = INT_MIN;
-	//printb( test );
-	//printf( "\n" );
-	//printb( test >> 31 );
-	//for( int i = 0; i < 8; i++ )
-	//{
-	//	printf( "\n" );
-	//	printb( test >> i );
-	//}
-
-
 	png::PNG _png;
 	_png.load( "Assets/a.png" );
 	_png.write( "Assets/output.png" );
@@ -65,9 +53,9 @@ int main( int argc, char* argv[] )
 	Huffman huffman;
 
 	//	データ圧縮
-	//lzss.encode( rawData, compressedLZSSData );
-	//huffman.encode( compressedLZSSData, compressedHuffmanData );
-	huffman.encode( rawData, compressedHuffmanData );
+	lzss.encode( rawData, compressedLZSSData );
+	huffman.encode( compressedLZSSData, compressedHuffmanData );
+	//huffman.encode( rawData, compressedHuffmanData );
 
 	BYTE* output = compressedHuffmanData.data();
 
@@ -83,9 +71,9 @@ int main( int argc, char* argv[] )
 
 	//	データ解凍
 	rawData.clear();
-	//compressedLZSSData.clear();
-	huffman.decode(compressedHuffmanData, rawData);
-	//lzss.decode( compressedLZSSData, rawData );
+	compressedLZSSData.clear();
+	huffman.decode(compressedHuffmanData, compressedLZSSData);
+	lzss.decode( compressedLZSSData, rawData );
 
 	output = rawData.data();
 
@@ -117,19 +105,3 @@ int main( int argc, char* argv[] )
 	
 	return 0;
 }
-
-/*
-//	エンディアンの確認
-union
-	{
-		uint32_t b4;	// 4byte
-		uint16_t b2[2];	// 2byte×2
-		uint8_t b1[4];	// 1byte×4
-	} bytes;
-
-	 bytes.b4 = 0x12345678;
-	 printf( "bytes.b4: %08X\n", bytes.b4 );
-	 printf( "bytes.b2: %04X, %04X\n", bytes.b2[0], bytes.b2[1] );
-	 printf( "bytes.b1: %02X, %02X, %02X, %02X\n", bytes.b1[0], bytes.b1[1], bytes.b1[2], bytes.b1[3] );
-
-*/

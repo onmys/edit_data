@@ -143,7 +143,7 @@ bool Huffman::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compre
 
 	//	対応コードの登録
 	//	対応コード数
-	compressedData.push_back( _nodes.size() );
+	compressedData.push_back( _nodes.size() - 1 );
 	printf( "対応コード登録(数：%d）\n", compressedData[0] );
 
 	for( auto i = _nodes.begin(); i != _nodes.end(); i++ )
@@ -162,6 +162,9 @@ bool Huffman::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compre
 	//	実データを対応コードに差し替え
 	length = 0;
 	unsigned long encodeData = 0;
+	int shift = 0;
+
+	printf( "実データを対応コードに差し替え\n" );
 
 	for( int i = 0; i < rawData.size(); i++ )
 	{
@@ -169,13 +172,21 @@ bool Huffman::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compre
 		encodeData |= _nodes[rawData[i]].encode;
 		length += _nodes[rawData[i]].length;
 
+		printf( "実コード：%d, 対応コード：%d\n", rawData[i], _nodes[rawData[i]].encode );
+
 		if( length >= 8 )
 		{
 			compressedData.push_back( BYTE( encodeData >> ( length - 8 ) ) );
-			encodeData <<= ( 32 - ( length - 8 ) );
-			encodeData >>= ( 32 - ( length - 8 ) );
+			shift = ( 32 - ( length - 8 ) );
+			encodeData = shift >= 32 ? 0 : encodeData << shift;
+			encodeData = shift >= 32 ? 0 : encodeData >> shift;
 			length -= 8;
 		}
+	}
+
+	if( length > 0 )
+	{
+		compressedData.push_back( BYTE( encodeData ) );
 	}
 
 	return true;
@@ -194,7 +205,7 @@ bool Huffman::decode( const std::vector<BYTE> compressedData, std::vector<BYTE>&
 	unsigned long encode;
 	Node node;
 
-	for( int i = 0; i < codeSize; i++ )
+	for( int i = 0; i <= codeSize; i++ )
 	{
 		encode = 0;
 		key = compressedData[dataPosition++];
@@ -239,6 +250,7 @@ bool Huffman::decode( const std::vector<BYTE> compressedData, std::vector<BYTE>&
 			i++;
 		}
 	}
+
 
 	return true;
 }

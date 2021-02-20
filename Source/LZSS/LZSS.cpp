@@ -79,20 +79,20 @@ bool LZSS::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compresse
 				{
 					printf( "%02x ", slide[slidePostion - REFERENCE_SIZE + encodePosition + i] );
 				}
-				compressedData.push_back( 0x01 );
+				dataPush( BYTE( 0x01 ), 1, compressedData );
 				encodeData = ( encodePosition << LENGTH_SIZE ) | ( encodeLength - LENGTH_MIN );
 				printf( "encodeした文字列：%02x %02x", encodeData >> 8, encodeData & 0xFF );
 				printf("\n\n");
-				compressedData.push_back( encodeData >> 8 );
-				compressedData.push_back( encodeData & 0xFF );
+				dataPush( BYTE( encodeData >> 8 ), 8, compressedData );
+				dataPush( BYTE( encodeData & 0xFF ), 8, compressedData );
 				slidePostion += encodeLength;
 			}
 			else if( encodeLength > 0 )
 			{
 				for( int i = 0; i < encodeLength; i++ )
 				{
-					compressedData.push_back( 0x00 );
-					compressedData.push_back( slide[slidePostion] );
+					dataPush( BYTE( 0x00 ), 1, compressedData );
+					dataPush( slide[slidePostion], 8, compressedData );
 					slidePostion++;
 					rawNum++;
 					cancompressedSize--;
@@ -100,8 +100,8 @@ bool LZSS::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compresse
 			}
 			else
 			{
-				compressedData.push_back( 0x00 );
-				compressedData.push_back( slide[slidePostion] );
+				dataPush( BYTE( 0x00 ), 1, compressedData );
+				dataPush( slide[slidePostion], 8, compressedData );
 				slidePostion++;
 				rawNum++;
 				cancompressedSize--;
@@ -125,40 +125,99 @@ bool LZSS::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compresse
 
 bool LZSS::decode( const std::vector<BYTE> compressedData, std::vector<BYTE>& rawData )
 {
-	//	読み込みサイズ
-	int loadSize = 0;
-	//	スライド位置
-	int slidePostion = 0;
+	BYTE data;
 
-	while( compressedData.size() > loadSize )
+	while( true )
 	{
-		if( compressedData[loadSize] == 0x00 )
+		if( !dataPop( compressedData, 1, data ) )
 		{
-			rawData.push_back( compressedData[++loadSize] );
-			//printf( "%x\n", rawData[rawData.size() - 1] );
-			//printf( "\n\n" );
+			break;
+		}
+
+		if( data == 0x00 )
+		{
+			if( !dataPop( compressedData, 8, data ) )
+			{
+				break;
+			}
+
+			rawData.push_back( data );
 		}
 		else
 		{
-			if( loadSize > 1500 )
+			if( !dataPop( compressedData, 8, data ) )
 			{
-				int a = 0;
-				a = 0;
+				break;
 			}
-			BYTE a = compressedData[++loadSize];
-			BYTE b = compressedData[++loadSize];
-			WORD encodeData = ( a << 8 ) | b;
+			BYTE a = data;
+			if( !dataPop( compressedData, 8, data ) )
+			{
+				break;
+			}
+			BYTE b = data;
+			encodeData = ( a << 8 ) | b;
 
 			for( int i = 0; i < ( encodeData & 0x07 ) + LENGTH_MIN; i++ )
 			{
-				rawData.push_back( rawData[rawData.size() - REFERENCE_SIZE + ( encodeData >> LENGTH_SIZE )] );
-				//printf( "%x\n", rawData[rawData.size() - 1] );
-			}
-			//printf( "\n\n" );
-		}
+				int check = rawData.size() - REFERENCE_SIZE + ( encodeData >> LENGTH_SIZE );
 
-		loadSize++;
+				if( check >= 0 && check < rawData.size() )
+				{
+					rawData.push_back( rawData[rawData.size() - REFERENCE_SIZE + ( encodeData >> LENGTH_SIZE )] );
+				}
+			}
+		}
 	}
 
 	return true;
+}
+
+void LZSS::dataPush( BYTE data, int length, std::vector<BYTE>& compressedData )
+{
+	static unsigned long buffer = 0;
+	static int bufferLength = 0;
+	int shift = 0;
+
+	buffer <<= length;
+	buffer |= data;
+	bufferLength += length;
+
+	while( bufferLength >= 8 )
+	{
+		compressedData.push_back( BYTE( buffer >> ( bufferLength - 8 ) ) );
+		shift = ( 32 - ( bufferLength - 8 ) );
+		buffer = shift >= 32 ? 0 : buffer << shift;
+		buffer = shift >= 32 ? 0 : buffer >> shift;
+		bufferLength -= 8;
+	}
+}
+
+bool LZSS::dataPop( const std::vector<BYTE> compressedData, int popLength, BYTE& popData )
+{
+	static int compressedDataPosition = 0;
+	static unsigned long buffer = 0;
+	static int bufferLength = 0;
+
+	if( compressedDataPosition == 4855 )
+	{
+		compressedDataPosition = 4855;
+	}
+
+	if( bufferLength < popLength )
+	{
+		if( compressedDataPosition < compressedData.size() )
+		{
+			buffer <<= 8;
+			buffer |= compressedData[compressedDataPosition++];
+			bufferLength += 8;
+		}
+	}
+
+	popData = BYTE( buffer >> ( bufferLength - popLength ) );
+	int shift = ( 32 - ( bufferLength - popLength ) );
+	buffer = shift >= 32 ? 0 : buffer << shift;
+	buffer = shift >= 32 ? 0 : buffer >> shift;
+	bufferLength -= popLength;
+
+	return !( compressedDataPosition == compressedData.size() && bufferLength <= 0);
 }
