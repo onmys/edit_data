@@ -10,7 +10,7 @@ struct Node
 	Node* childLeft;
 	Node* childRight;
 
-	long length;
+	unsigned long length;
 	unsigned long encode;
 };
 
@@ -33,7 +33,7 @@ public:
 
 private:
 	int getNodeDepthNum( Node* node );
-	void find( long code, int codeLength, BYTE& key, Node& node );
+	void find( unsigned long code, int codeLength, BYTE& key, Node& node );
 
 	std::map<int, Node> _nodes;
 	std::vector<BYTE> _inputRawData;

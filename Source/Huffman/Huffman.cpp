@@ -73,7 +73,7 @@ bool Huffman::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compre
 			}
 		}
 
-		if( nodeLeftDepth < nodeRightDepth )
+		if( nodeLeft->count == nodeRight->count && nodeLeftDepth < nodeRightDepth )
 		{
 			Node* tmp = nodeLeft;
 			nodeLeft = nodeRight;
@@ -104,8 +104,8 @@ bool Huffman::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compre
 	}
 
 	//	対応コードの作成
-	int length = 0;
-	int encode = 0;
+	unsigned long length = 0;
+	unsigned long encode = 0;
 
 	for( auto i = _nodes.begin(); i != _nodes.end(); i++ )
 	{
@@ -117,7 +117,7 @@ bool Huffman::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compre
 
 			while( node->parent )
 			{
-				int tmp = node == node->parent->childRight ? 0 : 1;
+				unsigned long tmp = node == node->parent->childRight ? 0 : 1;
 
 				node = node->parent;
 				encode |= ( tmp << length );
@@ -153,9 +153,9 @@ bool Huffman::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compre
 		//	対応コードの長さ
 		compressedData.push_back( BYTE( i->second.length ) );
 		//	対応コード
-		for( int k = 0; k < i->second.length; k++ )
+		for( int k = 0; k < i->second.length; k += 8 )
 		{
-			compressedData.push_back( BYTE( i->second.encode >> ( k * 8 ) ) );
+			compressedData.push_back( BYTE( i->second.encode >> k ) );
 		}
 	}
 
@@ -174,7 +174,7 @@ bool Huffman::encode( const std::vector<BYTE> rawData, std::vector<BYTE>& compre
 
 		printf( "実コード：%d, 対応コード：%d\n", rawData[i], _nodes[rawData[i]].encode );
 
-		if( length >= 8 )
+		while( length >= 8 )
 		{
 			compressedData.push_back( BYTE( encodeData >> ( length - 8 ) ) );
 			shift = ( 32 - ( length - 8 ) );
@@ -197,11 +197,10 @@ bool Huffman::decode( const std::vector<BYTE> compressedData, std::vector<BYTE>&
 	//	対応コードの取得
 	int dataPosition = 0;
 	int codeSize = compressedData[dataPosition++];
-	//std::map<int, Node> codes;
 	_nodes.clear();
 
-	long key = 0;
-	long length = 0;
+	unsigned long key = 0;
+	unsigned long length = 0;
 	unsigned long encode;
 	Node node;
 
@@ -211,9 +210,9 @@ bool Huffman::decode( const std::vector<BYTE> compressedData, std::vector<BYTE>&
 		key = compressedData[dataPosition++];
 		length = compressedData[dataPosition++];
 
-		for( int k = 0; k < length; k++ )
+		for( int k = 0; k < length; k += 8 )
 		{
-			encode |= ( compressedData[dataPosition++] << ( k * 8 ) );
+			encode |= ( compressedData[dataPosition++] << k );
 		}
 
 		node = { 0, nullptr, nullptr, nullptr, length, encode };
@@ -251,6 +250,28 @@ bool Huffman::decode( const std::vector<BYTE> compressedData, std::vector<BYTE>&
 		}
 	}
 
+	bool isBreak = false;
+
+	while( true )
+	{
+		node.encode = 0;
+		node.length = 0;
+
+		find( buffer, bufferLength, raw, node );
+
+		if( node.length > 0 )
+		{
+			rawData.push_back( raw );
+			shift = 32 - ( bufferLength - node.length );
+			buffer = shift >= 32 ? 0 : buffer << shift;
+			buffer = shift >= 32 ? 0 : buffer >> shift;
+			bufferLength -= node.length;
+		}
+		else
+		{
+			break;
+		}
+	}
 
 	return true;
 }
@@ -273,10 +294,10 @@ int Huffman::getNodeDepthNum( Node* node )
 	return depthNum;
 }
 
-void Huffman::find( long code, int codeLength, BYTE& key, Node& node )
+void Huffman::find( unsigned long code, int codeLength, BYTE& key, Node& node )
 {
-	long tmp = 0;
-	int length = 0;
+	unsigned long length = 0;
+	unsigned long tmp = 0;
 
 	for( int i = codeLength - 1; i >= 0; i-- )
 	{
